@@ -4,8 +4,12 @@
       <div
         v-for="(image, index) in images"
         :key="index"
-        v-show="currentIndex === index"
         class="image-wrapper"
+        :style="{
+          opacity: currentIndex === index ? 1 : 0,
+          transform: `scale(${currentIndex === index ? 1 : 0.95})`,
+          zIndex: currentIndex === index ? 1 : 0
+        }"
       >
         <img
           :src="image.url"
@@ -30,41 +34,27 @@
 </template>
 
 <script>
-import img1 from '@/assets/images/IMG_8081.JPG'
-import img2 from '@/assets/images/IMG_8082.JPG'
-import img3 from '@/assets/images/IMG_8083.JPG'
-import img4 from '@/assets/images/IMG_8084.JPG'
+const imageContext = import.meta.glob('@/assets/images/*.{JPG,jpg,PNG,png}', { eager: true })
 
 export default {
   name: 'ImageSelector',
 
   data() {
+    const images = Object.entries(imageContext).map(([path, module]) => {
+      const name = path.split('/').pop().split('.')[0]
+      return {
+        id: name,
+        url: module.default,
+        name: `活动${name.slice(-4)}`  // 使用文件名最后4位作为活动编号
+      }
+    })
+
     return {
-      images: [
-        {
-          id: 1,
-          url: img1,
-          name: '活动1'
-        },
-        {
-          id: 2,
-          url: img2,
-          name: '活动2'
-        },
-        {
-          id: 3,
-          url: img3,
-          name: '活动3'
-        },
-        {
-          id: 4,
-          url: img4,
-          name: '活动4'
-        }
-      ],
+      images,
       currentIndex: 0,
       isSelecting: false,
-      loadedImages: {}
+      loadedImages: {},
+      animationSpeed: 100  // 控制动画速度（毫秒）
     }
   },
 
@@ -79,32 +69,48 @@ export default {
       this.$set(this.loadedImages, index, true)
     },
 
-    startSelection() {
+    async startSelection() {
       if (this.isSelecting) return
 
       this.isSelecting = true
-      const duration = 2000
-      let startTime = null
+      const totalDuration = 3000  // 总动画时长
+      const initialSpeed = 50     // 初始切换间隔（毫秒）
+      const finalSpeed = 300      // 最终切换间隔（毫秒）
+      let currentSpeed = initialSpeed
+      
+      const startTime = Date.now()
 
-      const animate = timestamp => {
-        if (!startTime) startTime = timestamp
-        const progress = timestamp - startTime
-
-        if (progress < duration) {
-          this.currentIndex = Math.floor(
-            Math.random() * this.images.length
-          )
-          requestAnimationFrame(animate)
-        } else {
-          const finalIndex = Math.floor(
-            Math.random() * this.images.length
-          )
-          this.currentIndex = finalIndex
-          this.isSelecting = false
-        }
+      while (Date.now() - startTime < totalDuration) {
+        // 计算动画进度（0到1之间）
+        const progress = (Date.now() - startTime) / totalDuration
+        
+        // 使用easeOut函数使动画逐渐减速
+        currentSpeed = initialSpeed + (finalSpeed - initialSpeed) * this.easeOutQuad(progress)
+        
+        // 随机选择一个不同的索引
+        let newIndex
+        do {
+          newIndex = Math.floor(Math.random() * this.images.length)
+        } while (newIndex === this.currentIndex)
+        
+        this.currentIndex = newIndex
+        
+        // 等待当前速度对应的时间
+        await this.sleep(currentSpeed)
       }
 
-      requestAnimationFrame(animate)
+      // 最后一次随机
+      const finalIndex = Math.floor(Math.random() * this.images.length)
+      this.currentIndex = finalIndex
+      this.isSelecting = false
+    },
+
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
+    },
+
+    easeOutQuad(t) {
+      return t * (2 - t)  // 二次方缓动函数
     }
   },
 
@@ -144,12 +150,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.image-wrapper:not([v-show='false']) {
-  opacity: 1;
+  transition: all 0.3s ease;
 }
 
 .image-wrapper img {
@@ -170,6 +171,7 @@ export default {
   padding: 12px 30px;
   border-radius: 25px;
   font-size: 1.1rem;
+  font-family: inherit;  /* 继承父元素的字体 */
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(66, 184, 131, 0.2);
