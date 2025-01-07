@@ -33,9 +33,6 @@ export default {
 .app-container {
   min-height: 100vh;
   padding: 20px;
-  background: url('../assets/nanke.jpg') no-repeat center center fixed;
-  background-size: cover;
-  padding: 20px;
 }
 
 .content-wrapper {
