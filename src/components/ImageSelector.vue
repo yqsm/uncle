@@ -34,114 +34,125 @@
 </template>
 
 <script>
+import { ref, reactive, computed } from 'vue'
+
 const imageContext = import.meta.glob('@/assets/images/*.{JPG,jpg,PNG,png}', { eager: true })
 
 export default {
   name: 'ImageSelector',
 
-  data() {
+  setup() {
     const images = Object.entries(imageContext).map(([path, module]) => {
       const name = path.split('/').pop().split('.')[0]
       return {
         id: name,
         url: module.default,
-        name: `活动${name.slice(-4)}`  // 使用文件名最后4位作为活动编号
+        name: `活动${name.slice(-4)}`
       }
     })
 
-    return {
-      images,
-      currentIndex: 0,
-      isSelecting: false,
-      loadedImages: {},
-      animationSpeed: 100  // 控制动画速度（毫秒）
+    const currentIndex = ref(0)
+    const isSelecting = ref(false)
+    const loadedImages = reactive({})
+
+    const buttonText = computed(() => {
+      return isSelecting.value ? '选择中...' : '开始选择'
+    })
+
+    const handleImageLoad = (index) => {
+      loadedImages[index] = true
     }
-  },
 
-  computed: {
-    buttonText() {
-      return this.isSelecting ? '选择中...' : '开始选择'
+    const sleep = (ms) => {
+      return new Promise(resolve => setTimeout(resolve, ms))
     }
-  },
 
-  methods: {
-    handleImageLoad(index) {
-      this.$set(this.loadedImages, index, true)
-    },
+    const easeOutQuad = (t) => {
+      return t * (2 - t)
+    }
 
-    async startSelection() {
-      if (this.isSelecting) return
+    const startSelection = async () => {
+      if (isSelecting.value) return
 
-      this.isSelecting = true
-      const totalDuration = 3000  // 总动画时长
-      const initialSpeed = 50     // 初始切换间隔（毫秒）
-      const finalSpeed = 300      // 最终切换间隔（毫秒）
+      isSelecting.value = true
+      const totalDuration = 3000
+      const initialSpeed = 50
+      const finalSpeed = 300
       let currentSpeed = initialSpeed
       
       const startTime = Date.now()
 
       while (Date.now() - startTime < totalDuration) {
-        // 计算动画进度（0到1之间）
         const progress = (Date.now() - startTime) / totalDuration
+        currentSpeed = initialSpeed + (finalSpeed - initialSpeed) * easeOutQuad(progress)
         
-        // 使用easeOut函数使动画逐渐减速
-        currentSpeed = initialSpeed + (finalSpeed - initialSpeed) * this.easeOutQuad(progress)
-        
-        // 随机选择一个不同的索引
         let newIndex
         do {
-          newIndex = Math.floor(Math.random() * this.images.length)
-        } while (newIndex === this.currentIndex)
+          newIndex = Math.floor(Math.random() * images.length)
+        } while (newIndex === currentIndex.value)
         
-        this.currentIndex = newIndex
-        
-        // 等待当前速度对应的时间
-        await this.sleep(currentSpeed)
+        currentIndex.value = newIndex
+        await sleep(currentSpeed)
       }
 
-      // 最后一次随机
-      const finalIndex = Math.floor(Math.random() * this.images.length)
-      this.currentIndex = finalIndex
-      this.isSelecting = false
-    },
-
-    sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms))
-    },
-
-    easeOutQuad(t) {
-      return t * (2 - t)  // 二次方缓动函数
+      const finalIndex = Math.floor(Math.random() * images.length)
+      currentIndex.value = finalIndex
+      isSelecting.value = false
     }
-  },
 
-  mounted() {
     // 预加载所有图片
-    this.images.forEach((image, index) => {
+    images.forEach((image, index) => {
       const img = new Image()
       img.src = image.url
-      img.onload = () => this.handleImageLoad(index)
+      img.onload = () => handleImageLoad(index)
     })
+
+    return {
+      images,
+      currentIndex,
+      isSelecting,
+      loadedImages,
+      buttonText,
+      handleImageLoad,
+      startSelection
+    }
   }
 }
 </script>
 
 <style scoped>
 .card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 24px;
   max-width: 600px;
   margin: 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  pointer-events: none;
 }
 
 .image-display {
   aspect-ratio: 1;
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #f5f5f5;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .image-wrapper {
@@ -150,7 +161,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  transition: all 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .image-wrapper img {
@@ -161,41 +172,60 @@ export default {
 
 .controls {
   text-align: center;
-  padding: 20px 0;
+  padding: 8px 0;
+  position: relative;
 }
 
 .select-button {
-  background: #42b883;
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
+  background: transparent;
+  color: #4a4a4a;
+  border: 1px solid #4a4a4a;
+  padding: 12px 36px;
+  border-radius: 4px;
   font-size: 1.1rem;
-  font-family: inherit;  /* 继承父元素的字体 */
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(66, 184, 131, 0.2);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 2px;
+}
+
+.select-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(74, 74, 74, 0.1);
+  transition: all 0.3s ease;
 }
 
 .select-button:hover:not(.disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(66, 184, 131, 0.3);
+  color: #2c3e50;
+  border-color: #2c3e50;
+}
+
+.select-button:hover:not(.disabled)::before {
+  left: 0;
 }
 
 .select-button.disabled {
-  background: #ccc;
+  background: transparent;
+  border-color: #ccc;
+  color: #ccc;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 @media (max-width: 768px) {
   .card {
     margin: 10px;
+    padding: 16px;
   }
 
   .select-button {
-    padding: 10px 24px;
+    padding: 10px 28px;
     font-size: 1rem;
   }
 }
