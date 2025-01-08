@@ -96,10 +96,12 @@ html, body {
   
   .left {
     left: 20px;
+    text-align: left;
   }
   
   .right {
     right: 20px;
+    text-align: right;
   }
 }
 
@@ -109,14 +111,18 @@ html, body {
     padding: 0.4em 0.2em;
     max-height: 3em;
     position: absolute;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
   }
   
   .left {
     left: 10px;
+    text-align: left;
   }
   
   .right {
     right: 10px;
+    text-align: right;
   }
 }
 
