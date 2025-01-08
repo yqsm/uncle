@@ -89,44 +89,32 @@ html, body {
 
 @media screen and (max-width: 768px) {
   .decorative-text {
+    position: absolute;
     font-size: 48px;
     color: rgba(255, 230, 140, 1);
     text-shadow: 
       2px 2px 4px rgba(0, 0, 0, 0.3),
       -1px -1px 0 rgba(255, 255, 255, 0.5);
+    padding: 0.3em;
+    width: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .left {
-    left: 20px;
-    text-align: left;
+    left: 0;
   }
   
   .right {
-    right: 20px;
-    text-align: right;
+    right: 0;
   }
 }
 
 @media screen and (max-width: 480px) {
   .decorative-text {
     font-size: 36px;
-    padding: 0.4em 0.2em;
-    max-height: 3em;
-    position: absolute;
-    -webkit-writing-mode: vertical-rl;
-    writing-mode: vertical-rl;
-    -webkit-text-orientation: mixed;
-    text-orientation: mixed;
-  }
-  
-  .left {
-    left: 10px;
-    text-align: left;
-  }
-  
-  .right {
-    right: 10px;
-    text-align: right;
+    width: 1.2em;
   }
 }
 
