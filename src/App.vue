@@ -61,6 +61,7 @@ html, body {
   position: fixed;
   font-size: 72px;
   color: rgba(255, 217, 102, 0.9);
+  -webkit-writing-mode: vertical-rl;
   writing-mode: vertical-rl;
   z-index: 1;
   padding: 0.5em 0.3em;
@@ -72,6 +73,7 @@ html, body {
   overflow: hidden;
   text-align: center;
   top: 50%;
+  -webkit-transform: translateY(-50%);
   transform: translateY(-50%);
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -111,7 +113,9 @@ html, body {
     padding: 0.4em 0.2em;
     max-height: 3em;
     position: absolute;
+    -webkit-writing-mode: vertical-rl;
     writing-mode: vertical-rl;
+    -webkit-text-orientation: mixed;
     text-orientation: mixed;
   }
   
