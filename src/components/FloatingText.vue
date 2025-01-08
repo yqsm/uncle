@@ -71,17 +71,18 @@ export default {
         const bodies = Matter.Composite.allBodies(this.engine.world)
         bodies.forEach(body => {
           if (!body.isStatic) {
-            // 基础力场强度
-            const baseForce = 0.0001
+            // 基础力场强度（移动端减小力场）
+            const baseForce = window.innerWidth <= 768 ? 0.00005 : 0.0001
             
-            // 添加一个随时间变化的周期性分量
-            const time = Date.now() / 1000 // 转换为秒
-            const periodX = Math.sin(time * 0.5) * 0.0002
-            const periodY = Math.cos(time * 0.3) * 0.0002
+            // 添加一个随时间变化的周期性分量（移动端减小周期力）
+            const time = Date.now() / 1000
+            const periodScale = window.innerWidth <= 768 ? 0.0001 : 0.0002
+            const periodX = Math.sin(time * 0.5) * periodScale
+            const periodY = Math.cos(time * 0.3) * periodScale
             
             // 合成力场
             const forceX = baseForce + periodX
-            const forceY = -baseForce + periodY // 负值使力向上
+            const forceY = -baseForce + periodY
             
             Matter.Body.applyForce(body, body.position, {
               x: forceX,
@@ -179,7 +180,7 @@ export default {
   right: 0;
   bottom: 0;
   z-index: 10;
-  pointer-events: none;  /* 容器不响应点击 */
+  pointer-events: none;
 }
 
 .floating-text {
@@ -195,8 +196,14 @@ export default {
   user-select: none;
   will-change: transform;
   transition: color 0.2s;
-  pointer-events: auto;  /* 文字可以点击 */
-  cursor: pointer;       /* 鼠标变为手型 */
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 20px;
+  background: transparent;
+  min-height: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .floating-text:hover {
@@ -206,12 +213,14 @@ export default {
 @media screen and (max-width: 768px) {
   .floating-text {
     font-size: 48px;
+    padding: 15px;
   }
 }
 
 @media screen and (max-width: 480px) {
   .floating-text {
     font-size: 36px;
+    padding: 10px;
   }
 }
 </style>
