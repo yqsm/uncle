@@ -95,11 +95,11 @@ html, body {
   }
   
   .left {
-    left: -0.25em;
+    left: 20px;
   }
   
   .right {
-    right: -0.25em;
+    right: 20px;
   }
 }
 
@@ -108,14 +108,15 @@ html, body {
     font-size: 36px;
     padding: 0.4em 0.2em;
     max-height: 3em;
+    position: absolute;
   }
   
   .left {
-    left: -0.3em;
+    left: 10px;
   }
   
   .right {
-    right: -0.3em;
+    right: 10px;
   }
 }
 
