@@ -4,8 +4,12 @@
       <div
         v-for="(image, index) in images"
         :key="index"
-        v-show="currentIndex === index"
         class="image-wrapper"
+        :style="{
+          opacity: currentIndex === index ? 1 : 0,
+          transform: `scale(${currentIndex === index ? 1 : 0.95})`,
+          zIndex: currentIndex === index ? 1 : 0
+        }"
       >
         <img
           :src="image.url"
@@ -30,112 +34,125 @@
 </template>
 
 <script>
-import img1 from '@/assets/images/IMG_8081.JPG'
-import img2 from '@/assets/images/IMG_8082.JPG'
-import img3 from '@/assets/images/IMG_8083.JPG'
-import img4 from '@/assets/images/IMG_8084.JPG'
+import { ref, reactive, computed } from 'vue'
+
+const imageContext = import.meta.glob('@/assets/images/*.{JPG,jpg,PNG,png}', { eager: true })
 
 export default {
   name: 'ImageSelector',
 
-  data() {
-    return {
-      images: [
-        {
-          id: 1,
-          url: img1,
-          name: '活动1'
-        },
-        {
-          id: 2,
-          url: img2,
-          name: '活动2'
-        },
-        {
-          id: 3,
-          url: img3,
-          name: '活动3'
-        },
-        {
-          id: 4,
-          url: img4,
-          name: '活动4'
-        }
-      ],
-      currentIndex: 0,
-      isSelecting: false,
-      loadedImages: {}
+  setup() {
+    const images = Object.entries(imageContext).map(([path, module]) => {
+      const name = path.split('/').pop().split('.')[0]
+      return {
+        id: name,
+        url: module.default,
+        name: `活动${name.slice(-4)}`
+      }
+    })
+
+    const currentIndex = ref(0)
+    const isSelecting = ref(false)
+    const loadedImages = reactive({})
+
+    const buttonText = computed(() => {
+      return isSelecting.value ? '选择中...' : '开始选择'
+    })
+
+    const handleImageLoad = (index) => {
+      loadedImages[index] = true
     }
-  },
 
-  computed: {
-    buttonText() {
-      return this.isSelecting ? '选择中...' : '开始选择'
+    const sleep = (ms) => {
+      return new Promise(resolve => setTimeout(resolve, ms))
     }
-  },
 
-  methods: {
-    handleImageLoad(index) {
-      this.$set(this.loadedImages, index, true)
-    },
+    const easeOutQuad = (t) => {
+      return t * (2 - t)
+    }
 
-    startSelection() {
-      if (this.isSelecting) return
+    const startSelection = async () => {
+      if (isSelecting.value) return
 
-      this.isSelecting = true
-      const duration = 2000
-      let startTime = null
+      isSelecting.value = true
+      const totalDuration = 3000
+      const initialSpeed = 50
+      const finalSpeed = 300
+      let currentSpeed = initialSpeed
+      
+      const startTime = Date.now()
 
-      const animate = timestamp => {
-        if (!startTime) startTime = timestamp
-        const progress = timestamp - startTime
-
-        if (progress < duration) {
-          this.currentIndex = Math.floor(
-            Math.random() * this.images.length
-          )
-          requestAnimationFrame(animate)
-        } else {
-          const finalIndex = Math.floor(
-            Math.random() * this.images.length
-          )
-          this.currentIndex = finalIndex
-          this.isSelecting = false
-        }
+      while (Date.now() - startTime < totalDuration) {
+        const progress = (Date.now() - startTime) / totalDuration
+        currentSpeed = initialSpeed + (finalSpeed - initialSpeed) * easeOutQuad(progress)
+        
+        let newIndex
+        do {
+          newIndex = Math.floor(Math.random() * images.length)
+        } while (newIndex === currentIndex.value)
+        
+        currentIndex.value = newIndex
+        await sleep(currentSpeed)
       }
 
-      requestAnimationFrame(animate)
+      const finalIndex = Math.floor(Math.random() * images.length)
+      currentIndex.value = finalIndex
+      isSelecting.value = false
     }
-  },
 
-  mounted() {
     // 预加载所有图片
-    this.images.forEach((image, index) => {
+    images.forEach((image, index) => {
       const img = new Image()
       img.src = image.url
-      img.onload = () => this.handleImageLoad(index)
+      img.onload = () => handleImageLoad(index)
     })
+
+    return {
+      images,
+      currentIndex,
+      isSelecting,
+      loadedImages,
+      buttonText,
+      handleImageLoad,
+      startSelection
+    }
   }
 }
 </script>
 
 <style scoped>
 .card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 24px;
   max-width: 600px;
   margin: 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  pointer-events: none;
 }
 
 .image-display {
   aspect-ratio: 1;
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #f5f5f5;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .image-wrapper {
@@ -144,12 +161,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.image-wrapper:not([v-show='false']) {
-  opacity: 1;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .image-wrapper img {
@@ -160,40 +172,60 @@ export default {
 
 .controls {
   text-align: center;
-  padding: 20px 0;
+  padding: 8px 0;
+  position: relative;
 }
 
 .select-button {
-  background: #42b883;
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 25px;
+  background: transparent;
+  color: #4a4a4a;
+  border: 1px solid #4a4a4a;
+  padding: 12px 36px;
+  border-radius: 4px;
   font-size: 1.1rem;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(66, 184, 131, 0.2);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 2px;
+}
+
+.select-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(74, 74, 74, 0.1);
+  transition: all 0.3s ease;
 }
 
 .select-button:hover:not(.disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 8px rgba(66, 184, 131, 0.3);
+  color: #2c3e50;
+  border-color: #2c3e50;
+}
+
+.select-button:hover:not(.disabled)::before {
+  left: 0;
 }
 
 .select-button.disabled {
-  background: #ccc;
+  background: transparent;
+  border-color: #ccc;
+  color: #ccc;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 @media (max-width: 768px) {
   .card {
     margin: 10px;
+    padding: 16px;
   }
 
   .select-button {
-    padding: 10px 24px;
+    padding: 10px 28px;
     font-size: 1rem;
   }
 }
