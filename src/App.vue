@@ -60,17 +60,21 @@ html, body {
 .decorative-text {
   position: fixed;
   font-size: 72px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 217, 102, 0.9);
   writing-mode: vertical-rl;
   z-index: 1;
   padding: 0.5em 0.3em;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 
+    2px 2px 0 rgba(255, 166, 0, 0.4),
+    -2px -2px 0 rgba(255, 255, 255, 0.4);
   line-height: 1.2;
   max-height: 4em;
   overflow: hidden;
   text-align: center;
   top: 50%;
   transform: translateY(-50%);
+  font-weight: 600;
+  letter-spacing: 0.1em;
 }
 
 .left {
@@ -84,8 +88,10 @@ html, body {
 @media screen and (max-width: 768px) {
   .decorative-text {
     font-size: 48px;
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 0.2em;
+    color: rgba(255, 230, 140, 1);
+    text-shadow: 
+      2px 2px 4px rgba(0, 0, 0, 0.3),
+      -1px -1px 0 rgba(255, 255, 255, 0.5);
   }
   
   .left {
