@@ -95,26 +95,33 @@ html, body {
     text-shadow: 
       2px 2px 4px rgba(0, 0, 0, 0.3),
       -1px -1px 0 rgba(255, 255, 255, 0.5);
-    padding: 0.3em;
-    width: 1.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0;
   }
   
   .left {
     left: 0;
+    margin-left: 10px;
+    text-align: start;
   }
   
   .right {
     right: 0;
+    margin-right: 10px;
+    text-align: end;
   }
 }
 
 @media screen and (max-width: 480px) {
   .decorative-text {
     font-size: 36px;
-    width: 1.2em;
+  }
+  
+  .left {
+    margin-left: 5px;
+  }
+  
+  .right {
+    margin-right: 5px;
   }
 }
 
